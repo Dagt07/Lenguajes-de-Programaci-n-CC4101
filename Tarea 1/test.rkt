@@ -12,6 +12,11 @@
 
 ;; ----- Parte c) -----
 
+(test (degree simple_cf) 0)
+(test (degree my_cf) 1)
+(test (degree my_cf_2) 2)
+(test (degree my_cf_3) 3)
+
 
 ;; ----- Parte d) -----
 

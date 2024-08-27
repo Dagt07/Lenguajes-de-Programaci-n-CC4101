@@ -17,16 +17,29 @@ RUT: 266834624-4
 
 (deftype CFraction
     (simple value)
-    (compound value value fraction)
+    (compound value1 value2 fraction)
 )
 
 ;; Parte b)
 ;; eval :: CFraction -> Rational
-
+;; evalua una fracción continua, devolviendo el número racional que representa
 
 ;; Parte c)
 ;; degree ::  CFraction -> Integer
+;; devuelve el grado de una fracción continua
 
+(define (degree cfrac)
+    (match cfrac
+        [(simple val) 0]
+        [(compound val1 val2 cf) (+ 1 (degree cf))]
+    )
+)
+
+
+(define simple_cf (simple 0))
+(define my_cf (compound 12 1 (simple 4)))
+(define my_cf_2 (compound 4 1 (compound 12 1 (simple 4))))
+(define my_cf_3 (compound 3 1 (compound 4 1 (compound 12 1 (simple 4)))))
 
 ;; Parte d)
 ;; fold-cfraction :: (Integer -> A) (Integer Integer A -> A) -> (CFraction -> A)
