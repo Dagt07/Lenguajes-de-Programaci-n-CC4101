@@ -20,9 +20,22 @@ RUT: 266834624-4
     (compound value1 value2 fraction)
 )
 
+;; identificadores comunes a usar en los tests
+(define simple_cf (simple 1))
+(define my_cf (compound 12 1 (simple 4)))
+(define my_cf_2 (compound 4 1 (compound 12 1 (simple 4))))
+(define my_cf_3 (compound 3 1 (compound 4 1 (compound 12 1 (simple 4)))))
+
 ;; Parte b)
 ;; eval :: CFraction -> Rational
 ;; evalua una fracción continua, devolviendo el número racional que representa
+
+(define (eval cfrac)
+    (match cfrac
+        [(simple val) val]
+        [(compound val1 val2 cf) (+ val1 (/ val2 (eval cf)))]
+    )
+)
 
 ;; Parte c)
 ;; degree ::  CFraction -> Integer
@@ -35,17 +48,12 @@ RUT: 266834624-4
     )
 )
 
-
-(define simple_cf (simple 0))
-(define my_cf (compound 12 1 (simple 4)))
-(define my_cf_2 (compound 4 1 (compound 12 1 (simple 4))))
-(define my_cf_3 (compound 3 1 (compound 4 1 (compound 12 1 (simple 4)))))
-
 ;; Parte d)
 ;; fold-cfraction :: (Integer -> A) (Integer Integer A -> A) -> (CFraction -> A)
 
 
 ;; Parte e)
+;; redefinir eval y degree usando la abstracción de fold-cfraction
 ;; eval2 :: CFraction -> Rational
 
 

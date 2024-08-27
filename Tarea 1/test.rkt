@@ -9,6 +9,10 @@
 
 ;; ----- Parte b) -----
 
+(test (eval simple_cf) 1)
+(test (eval my_cf) 49/4)
+(test (eval my_cf_2) 200/49)
+(test (eval my_cf_3) 649/200)
 
 ;; ----- Parte c) -----
 
