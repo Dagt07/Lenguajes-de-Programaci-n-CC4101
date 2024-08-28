@@ -11,8 +11,8 @@ RUT: 266834624-4
 
 ;; Gramatica BNF 
 #|
-<CFraction> ::= (simple <value>)
-              | (compound <value> <value> <CFraction>)
+<CFraction> ::= (simple <Integer>)
+              | (compound <Integer> <Integer> <CFraction>)
 |#
 
 (deftype CFraction
@@ -51,16 +51,32 @@ RUT: 266834624-4
 ;; Parte d)
 ;; fold-cfraction :: (Integer -> A) (Integer Integer A -> A) -> (CFraction -> A)
 
+(define (fold-cfraction func_for_simple func_for_compound)
+    (λ (cfrac)
+        (match cfrac
+            [(simple val) (func_for_simple val)]
+            [(compound val1 val2 cf) 
+             (func_for_compound val1
+                ((fold-cfraction func_for_simple func_for_compound) cf))]
+        )
+    )
+)
 
 ;; Parte e)
 ;; redefinir eval y degree usando la abstracción de fold-cfraction
 ;; eval2 :: CFraction -> Rational
-
+(define fold-eval 
+    (fold-cfraction (λ (val) val)
+                    (λ (val1 val2 cf) (+ val1 (/ val2 cf))) )
+)
 
 ;; degree2 ::  CFraction -> Integer
+(define fold-degree
+    (fold-cfraction (λ (val) 0)
+                    (λ (val1 val2 cf) (+ 1 cf)) )
+)
 
-
-;; Observación: recordar que las fold-function usna los mismos tests que la function original o que quieren abstraer
+;; Observación: recordar que las fold-function usan los mismos tests que la function original o que quieren abstraer
 
 ;; Parte f)
 ;; mysterious-cf :: Integer -> CFraction
