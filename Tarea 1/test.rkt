@@ -43,8 +43,30 @@
 
 ;; ----- Parte f) -----
 
+(define simple_c0 (simple 6) )
+(define mysterious_c1 (compound 6 (sqr 1) (simple 6)) )
+(define mysterious_c2 (compound 6 (sqr 1) (compound 6 (sqr 3) (simple 6))) )
+(define mysterious_c3 (compound 6 (sqr 1) (compound 6 (sqr 3) (compound 6 (sqr 5) (simple 6)))) )
+(define mysterious_c4 (compound 6 (sqr 1) (compound 6 (sqr 3) (compound 6 (sqr 5) (compound 6 (sqr 7) (simple 6))))) )
+
+(test (mysterious-cf 0) simple_c0)
+(test (mysterious-cf 1) mysterious_c1)
+(test (mysterious-cf 2) mysterious_c2)
+(test (mysterious-cf 3) mysterious_c3)
+(test (mysterious-cf 4) mysterious_c4)
+(test/exn (mysterious-cf -1) "Error: argumento negativo")
+
+;; Se pregunto al cuerpo docente si se podía hacer una función auxiliar -> Si
+;; Se pregunto si era necesario testear esa función auxiliar -> No
 
 ;; ----- Parte g) -----
+
+;; Tests para from-to
+(test (from-to 0 3) '(0 1 2))
+(test (from-to 2 5) '(2 3 4))
+(test (from-to 5 5) '())
+
+;; Tests para mysterious-list
 
 
 ;; ----- Parte h) -----
