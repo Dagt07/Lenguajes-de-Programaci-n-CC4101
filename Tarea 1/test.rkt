@@ -1,5 +1,6 @@
 #lang play
 (require "T1.rkt")
+(require math/flonum)
 
 (print-only-errors #t)
 
@@ -64,9 +65,18 @@
 ;; Tests para from-to
 (test (from-to 0 3) '(0 1 2))
 (test (from-to 2 5) '(2 3 4))
+(test (from-to 0 0) '())
 (test (from-to 5 5) '())
 
 ;; Tests para mysterious-list
+(define l1 (list (fl (- (eval (mysterious-cf 0)) 3)) ) )
+(define l2 (list (fl (- (eval (mysterious-cf 0)) 3)) (fl (- (eval (mysterious-cf 1)) 3)) ) )
+(define l3 (list (fl (- (eval (mysterious-cf 0)) 3)) (fl (- (eval (mysterious-cf 1)) 3)) (fl (- (eval (mysterious-cf 2)) 3)) ) )
+(define l4 (list (fl (- (eval (mysterious-cf 0)) 3)) (fl (- (eval (mysterious-cf 1)) 3)) (fl (- (eval (mysterious-cf 2)) 3)) (fl (- (eval (mysterious-cf 3)) 3)) ) )
 
-
+(test (mysterious-list 0) '())
+(test (mysterious-list 1) l1)
+(test (mysterious-list 2) l2)
+(test (mysterious-list 3) l3)
+(test (mysterious-list 4) l4)
 ;; ----- Parte h) -----

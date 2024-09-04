@@ -83,31 +83,40 @@ RUT: 266834624-4
   (cond
     [(< n 0) (error "Error: argumento negativo")] 
     [(zero? n) (simple 6)] 
-    [else (compound 6 (sqr 1) (mysterious-cf-helper 3 n))]))
+    [else (compound 6 (sqr 1) (mysterious-cf-helper 3 n))])
+)
 
 ;; mysterious-cf-helper :: Integer Integer -> CFraction
 ;; función auxiliar para construir fracciones continuas compuestas
 (define (mysterious-cf-helper k n)
   (if (equal? k (+ (* 2 n) 1))
       (simple 6)
-      (compound 6 (sqr k) (mysterious-cf-helper (+ k 2) n))))  ;; Construcción recursiva con incrementos impares
+      (compound 6 (sqr k) (mysterious-cf-helper (+ k 2) n))) ;; Construcción recursiva con incrementos impares
+)
 
 
 ;; Parte g)
-
 ;; from-to :: Integer Integer -> ListOf Integer
 ;; Construye una lista de enteros comprendidos entre dos enteros dados (excluyendo el segundo)
 (define (from-to start end)
   (if (>= start end)
       '()
-      (cons start (from-to (+ start 1) end))))
+      (cons start (from-to (+ start 1) end)))
+)
 
 ;; mysterious-list :: Integer -> ListOf Float
 ;; Devuelve una lista tal que el i-ésimo elemento es calculado como la resta de la evaluación de (mysterious-cf i) menos 3
-
+(define (mysterious-list n)
+  (map (λ (i)
+         (fl (- (eval (mysterious-cf i)) 3)) )  ;; Evalúa (mysterious-cf i), resta 3, y convierte a float
+       (from-to 0 n))
+)
 
 ;; A que numero tiende (mysterious-cf k) cuando k tiende a infinito?
-
+#|
+Lo probe para (mysterious-list 10), (mysterious-list 100), (mysterious-list 1000) y (mysterious-list 5000) y parece tender a Pi para k tendiendo al infinito
+,ciertamente de acuerdo a lo observado, se acerca cada vez más a los dígitos de Pi, es decir, los primeros dígitos de Pi van coincidiendo con los dígitos de (mysterious-list k) a medida que k aumenta
+|#
 
 ;; Parte h)
 ;; rac-to-cf :: Rational -> CFraction
