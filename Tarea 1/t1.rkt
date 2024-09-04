@@ -61,13 +61,13 @@ RUT: 266834624-4
 ;; Parte e)
 ;; redefinir eval y degree usando la abstracción de fold-cfraction
 ;; eval2 :: CFraction -> Rational
-(define fold-eval 
+(define eval2
     (fold-cfraction (λ (val) val)
                     (λ (val1 val2 cf) (+ val1 (/ val2 cf))) )
 )
 
 ;; degree2 ::  CFraction -> Integer
-(define fold-degree
+(define degree2
     (fold-cfraction (λ (val) 0)
                     (λ (val1 val2 cf) (+ 1 cf)) )
 )

@@ -29,17 +29,17 @@
 ;; ----- Parte e) -----
 ;; Observación: recordar que las fold-function usan los mismos tests que la function original o que quieren abstraer
 
-;; tests para fold-eval
-(test (fold-eval simple_cf) 1)
-(test (fold-eval my_cf) 49/4)
-(test (fold-eval my_cf_2) 200/49)
-(test (fold-eval my_cf_3) 649/200)
+;; tests para eval2
+(test (eval2 simple_cf) 1)
+(test (eval2 my_cf) 49/4)
+(test (eval2 my_cf_2) 200/49)
+(test (eval2 my_cf_3) 649/200)
 
-;; tests para fold-degree
-(test (fold-degree simple_cf) 0)
-(test (fold-degree my_cf) 1)
-(test (fold-degree my_cf_2) 2)
-(test (fold-degree my_cf_3) 3)
+;; tests para degree2
+(test (degree2 simple_cf) 0)
+(test (degree2 my_cf) 1)
+(test (degree2 my_cf_2) 2)
+(test (degree2 my_cf_3) 3)
 
 ;; ----- Parte f) -----
 
