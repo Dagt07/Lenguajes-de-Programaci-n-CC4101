@@ -83,4 +83,12 @@
 (test (mysterious-list 4) l4)
 
 ;; ----- Parte h) -----
+
+(test/exn (rac-to-cf -1) "Error: número negativo")
+(test (rac-to-cf 0) (simple 0))
+(test (rac-to-cf 1) (simple 1))
+(test (rac-to-cf 5) (simple 5))
+(test (rac-to-cf (+ 3 1/4)) (compound 3 1 (simple 4)) )
+(test (rac-to-cf (+ 2 1/3)) (compound 2 1 (simple 3)) )
+(test (rac-to-cf (+ 4 4/49)) (compound 4 1 (compound 12 1 (simple 4))) )
 (test (rac-to-cf (+ 3 49/200)) (compound 3 1 (compound 4 1 (compound 12 1 (simple 4)))) )

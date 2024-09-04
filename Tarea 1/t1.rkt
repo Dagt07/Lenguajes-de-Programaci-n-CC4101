@@ -123,13 +123,13 @@ Lo probe para (mysterious-list 10), (mysterious-list 100), (mysterious-list 1000
 ;; rac-to-cf :: Rational -> CFraction
 ;; Convierte un número racional no negativo a su representación en forma de fracción continua
 (define (rac-to-cf r) 
-    (let* ([a (floor r)])
-        (if (equal? (- r a) 0)
-            (simple a)
-            (compound a 1 (rac-to-cf (/ 1 (- r a))) )
+    (if (negative? r)
+        (error "Error: número negativo")
+        (let* ([a (floor r)])
+            (if (equal? (- r a) 0)
+                (simple a)
+                (compound a 1 (rac-to-cf (/ 1 (- r a))) )
+            )
         )
     )
 )
-
-
-
