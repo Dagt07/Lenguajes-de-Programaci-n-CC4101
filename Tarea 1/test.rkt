@@ -65,8 +65,10 @@
 ;; Tests para from-to
 (test (from-to 0 3) '(0 1 2))
 (test (from-to 2 5) '(2 3 4))
+(test (from-to 0 5) '(0 1 2 3 4))
 (test (from-to 0 0) '())
 (test (from-to 5 5) '())
+(test (from-to 5 0) '()) ;; Caso borde, de acuerdo al foro debe entregar la lista vacía: '()
 
 ;; Tests para mysterious-list
 (define l1 (list (fl (- (eval (mysterious-cf 0)) 3)) ) )
@@ -79,4 +81,6 @@
 (test (mysterious-list 2) l2)
 (test (mysterious-list 3) l3)
 (test (mysterious-list 4) l4)
+
 ;; ----- Parte h) -----
+(test (rac-to-cf (+ 3 49/200)) (compound 3 1 (compound 4 1 (compound 12 1 (simple 4)))) )

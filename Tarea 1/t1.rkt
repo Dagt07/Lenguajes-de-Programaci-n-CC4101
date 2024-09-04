@@ -47,6 +47,7 @@ RUT: 266834624-4
 
 ;; Parte d)
 ;; fold-cfraction :: (Integer -> A) (Integer Integer A -> A) -> (CFraction -> A)
+;; función de orden superior que recibe dos funciones y una fracción continua, y aplica la función correspondiente a la fracción continua
 (define (fold-cfraction func_for_simple func_for_compound)
     (λ (cfrac)
         (match cfrac
@@ -61,12 +62,14 @@ RUT: 266834624-4
 ;; Parte e)
 ;; redefinir eval y degree usando la abstracción de fold-cfraction
 ;; eval2 :: CFraction -> Rational
+;; evalua una fracción continua, devolviendo el número racional que representa usando el patron de abstracción fold
 (define eval2
     (fold-cfraction (λ (val) val)
                     (λ (val1 val2 cf) (+ val1 (/ val2 cf))) )
 )
 
 ;; degree2 ::  CFraction -> Integer
+;; devuelve el grado de una fracción continua usando el patron de abstracción fold
 (define degree2
     (fold-cfraction (λ (val) 0)
                     (λ (val1 val2 cf) (+ 1 cf)) )
@@ -77,13 +80,11 @@ RUT: 266834624-4
 ;; Parte f)
 ;; mysterious-cf :: Integer -> CFraction
 ;; genera una secuencia de fracciones continuas que aumenta de grado de acuerdo al argumento entero dado
-
-;; definimos una función auxiliar que nos ayude a construir fracciones continuas siguiendo el patron dado
 (define (mysterious-cf n)
   (cond
     [(< n 0) (error "Error: argumento negativo")] 
     [(zero? n) (simple 6)] 
-    [else (compound 6 (sqr 1) (mysterious-cf-helper 3 n))])
+    [else (compound 6 (sqr 1) (mysterious-cf-helper 3 n))]) ;; definimos una función auxiliar que nos ayude a construir fracciones continuas siguiendo el patron dado
 )
 
 ;; mysterious-cf-helper :: Integer Integer -> CFraction
@@ -120,3 +121,15 @@ Lo probe para (mysterious-list 10), (mysterious-list 100), (mysterious-list 1000
 
 ;; Parte h)
 ;; rac-to-cf :: Rational -> CFraction
+;; Convierte un número racional no negativo a su representación en forma de fracción continua
+(define (rac-to-cf r) 
+    (let* ([a (floor r)])
+        (if (equal? (- r a) 0)
+            (simple a)
+            (compound a 1 (rac-to-cf (/ 1 (- r a))) )
+        )
+    )
+)
+
+
+
