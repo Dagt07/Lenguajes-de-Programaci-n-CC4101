@@ -50,11 +50,11 @@ Concrete syntax of propositions:
 
 <s-prop> ::= true
           | false
-          | (list 'p-not <s-prop>)
-          | (list 'p-and <s-prop> <s-prop> ...)
-          | (list 'p-or <s-prop> <s-prop> ...)
+          | (list 'not <s-prop>)
+          | (list 'and <s-prop> <s-prop> ...)
+          | (list 'or <s-prop> <s-prop> ...)
           | <symbol> ;; p-id
-          | (list 'p-where (list <s-prop> <symbol>) <s-prop>)
+          | (list 'where (list <s-prop> <symbol>) <s-prop>)
 |#
 
 ;; parse-prop : <s-prop> -> Prop
@@ -62,7 +62,15 @@ Concrete syntax of propositions:
   (match s-expr
     ['true (tt)]
     ['false (ff)]
+    [(? symbol? x) (p-id x)]
     [(list 'not pred) (p-not (parse-prop pred))]
+    [(list 'and props ...) (if (< (length props) 2)
+                                (error 'parse-prop "and expects at least two operands")
+                                (p-and (map parse-prop props))) ]
+    [(list 'or props ...) (if (< (length props) 2)
+                               (error 'parse-prop "or expects at least two operands")
+                               (p-or (map parse-prop props))) ]
+    ;; where
   )
 )
 
