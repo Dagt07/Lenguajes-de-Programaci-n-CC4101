@@ -10,7 +10,7 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 |#
 
 ;;------------ ;;
-;;==== P1 ==== ;;
+;;==== P2 ==== ;;
 ;;------------ ;;
 
 
@@ -20,26 +20,17 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 
 
 #|
-Abstract syntax of propositions:
-
 <prop> ::= (tt)
          | (ff)
-         | (p-not <prop>)
-         | (p-and listOf(prop)) ;; listOf<prop> ;; podría ir la elipsis acá mismo o * o listOf
-         | (p-or listOf(prop))
-         | (p-id <symbol>)
-         | (p-where <prop> <symbol> <prop>)
+         | ...
 |#
 
 (deftype Prop
   (tt)
   (ff)
-  (p-not pred)
-  (p-and pred-ls)
-  (p-or pred-ls)
-  (p-id name)
-  (p-where named-prop id body) ;; notar que respecto a with visto en clase, cambio el orden de los argumentos
-)
+  ; ...
+  )
+
 
 ;;----- ;;
 ;; P1.b ;;
@@ -50,22 +41,11 @@ Concrete syntax of propositions:
 
 <s-prop> ::= true
           | false
-          | (list 'p-not <s-prop>)
-          | (list 'p-and <s-prop> <s-prop> ...)
-          | (list 'p-or <s-prop> <s-prop> ...)
-          | <symbol> ;; p-id
-          | (list 'p-where (list <s-prop> <symbol>) <s-prop>)
+          | ...
 |#
 
 ;; parse-prop : <s-prop> -> Prop
-(define (parse-prop s-expr)
-  (match s-expr
-    ['true (tt)]
-    ['false (ff)]
-    [(list 'not pred) (p-not (parse-prop pred))]
-  )
-)
-
+(define (parse-prop s-expr) '???)
 
 
 ;;----- ;;
