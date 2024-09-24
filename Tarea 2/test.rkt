@@ -1,7 +1,7 @@
 #lang play
 (require "t2.rkt")
 
-(print-only-errors #t)
+;;(print-only-errors #t)
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
@@ -56,6 +56,10 @@
 
 ;; ----- Parte e) -----
 
+(test (p-eval (tt)) (ttV)) 
+(test (p-eval (ff)) (ffV)) 
+(test (p-eval (p-not (tt))) (ffV) )
+(test (p-eval (p-not (ff))) (ttV) )
 
 ;;------------ ;;
 ;;==== P2 ==== ;;

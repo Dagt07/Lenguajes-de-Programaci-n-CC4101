@@ -83,7 +83,7 @@ Concrete syntax of propositions:
 ;; BNF for PValue
 ;; abstraction to represent booleans values for not depending on the language used
 #|
-<p-value> ::= (ttV)
+<pvalue> ::= (ttV)
           | (ffV)
 |#
 
@@ -124,7 +124,19 @@ Concrete syntax of propositions:
 
 ;; p-eval :: Prop(AS) -> PValue
 ;; Evaluates a proposition, aka, the interpreter.
-(define (p-eval p) '???)
+(define (p-eval p) 
+  (match p
+    [(tt) (ttV)]
+    [(ff) (ffV)]
+    [(p-not prop) (if (equal? (p-eval prop) (ttV)) 
+                        (ffV)
+                        (ttV))]
+    [(p-and prop-ls) (eval-and prop-ls)]
+    [(p-or prop-ls) (eval-or prop-ls)]
+    ;; p-id case
+    ;; where case
+  )
+)
 
 ;;------------ ;;
 ;;==== P2 ==== ;;
