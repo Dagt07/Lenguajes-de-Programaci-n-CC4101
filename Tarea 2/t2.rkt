@@ -34,9 +34,9 @@ Abstract syntax of propositions:
 (deftype Prop
   (tt)
   (ff)
-  (p-not pred)
-  (p-and pred-ls)
-  (p-or pred-ls)
+  (p-not prop)
+  (p-and prop-ls)
+  (p-or prop-ls)
   (p-id name)
   (p-where named-prop id body) ;; notar que respecto a with visto en clase, cambio el orden de los argumentos
 )
@@ -63,7 +63,7 @@ Concrete syntax of propositions:
     ['true (tt)]
     ['false (ff)]
     [(? symbol? x) (p-id x)]
-    [(list 'not pred) (p-not (parse-prop pred))]
+    [(list 'not prop) (p-not (parse-prop prop))]
     [(list 'and props ...) (if (< (length props) 2)
                                 (error 'parse-prop "and expects at least two operands")
                                 (p-and (map parse-prop props))) ]
@@ -80,15 +80,26 @@ Concrete syntax of propositions:
 ;; P1.c ;;
 ;;----- ;;
 
-
+;; BNF for PValue
+;; abstraction to represent booleans values for not depending on the language used
 #|
-<value> ::= ...
+<p-value> ::= (ttV)
+          | (ffV)
 |#
 
-;; (deftype PValue ...)
+(deftype PValue 
+  (ttV)
+  (ffV)
+)
 
 ;; from-Pvalue : PValue -> Prop
-(define (from-Pvalue p-value) '???)
+;; captures a PValue and returns the corresponding Prop with pvalues instead of prop "boolean" values
+(define (from-Pvalue p-value) 
+  (match p-value
+    [(ttV) (tt)]
+    [(ffV) (ff)]
+  )
+)
 
 
 ;;----- ;;
@@ -111,7 +122,8 @@ Concrete syntax of propositions:
 ;; eval-and : (Listof Prop) -> PValue
 (define (eval-and ps) '???)
 
-;; p-eval : Prop -> PValue
+;; p-eval :: Prop(AS) -> PValue
+;; Evaluates a proposition, aka, the interpreter.
 (define (p-eval p) '???)
 
 ;;------------ ;;

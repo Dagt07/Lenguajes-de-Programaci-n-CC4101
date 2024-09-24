@@ -1,7 +1,7 @@
 #lang play
 (require "t2.rkt")
 
-;;(print-only-errors #t)
+(print-only-errors #t)
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
@@ -43,15 +43,19 @@
 
 ;; id & where
 (test (parse-prop 'x) (p-id 'x))
-
+;;(test (parse-prop '{false where {x true}}) (p-where (ff) 'x (tt)) )
+;;(test (parse-prop '{x where {x true}}) (p-where (p-id 'x) 'x (tt)) )
 
 ;; ----- Parte c) -----
 
+(test (from-Pvalue (ttV)) (tt) )
+(test (from-Pvalue (ffV)) (ff) )
 
 ;; ----- Parte d) -----
 
 
 ;; ----- Parte e) -----
+
 
 ;;------------ ;;
 ;;==== P2 ==== ;;
