@@ -27,8 +27,8 @@ Abstract syntax of propositions:
          | (p-not <prop>)
          | (p-and listOf(prop)) ;; listOf<prop> ;; podría ir la elipsis acá mismo o * o listOf
          | (p-or listOf(prop))
-         | (p-id <symbol>)
          | (p-where <prop> <symbol> <prop>)
+         | (p-id <symbol>)
 |#
 
 (deftype Prop
@@ -38,7 +38,7 @@ Abstract syntax of propositions:
   (p-and prop-ls)
   (p-or prop-ls)
   (p-id name)
-  (p-where named-prop id body) ;; notar que respecto a with visto en clase, cambio el orden de los argumentos
+  (p-where body id named-prop) ;; notar que respecto a with visto en clase, cambio el orden de los argumentos
 )
 
 ;;----- ;;
@@ -53,11 +53,12 @@ Concrete syntax of propositions:
           | (list 'not <s-prop>)
           | (list 'and <s-prop> <s-prop> ...)
           | (list 'or <s-prop> <s-prop> ...)
+          | (list s-prop 'where (list <symbol> <s-prop>))
           | <symbol> ;; p-id
-          | (list 'where (list <s-prop> <symbol>) <s-prop>)
 |#
 
 ;; parse-prop : <s-prop> -> Prop
+;; parses a s-propotition into a Prop, ie, constructs the AST
 (define (parse-prop s-expr)
   (match s-expr
     ['true (tt)]
@@ -70,11 +71,11 @@ Concrete syntax of propositions:
     [(list 'or props ...) (if (< (length props) 2)
                                (error 'parse-prop "or expects at least two operands")
                                (p-or (map parse-prop props))) ]
-    ;; where
+    [(list body 'where (list (? symbol? id) named-prop))
+     (p-where (parse-prop body) id (parse-prop named-prop))]
+    
   )
 )
-
-
 
 ;;----- ;;
 ;; P1.c ;;
@@ -101,14 +102,35 @@ Concrete syntax of propositions:
   )
 )
 
-
 ;;----- ;;
 ;; P1.d ;;
 ;;----- ;;
 
 
 ;; p-subst : Prop Symbol Prop -> Prop
-(define (p-subst target name substitution) '???)
+;; (subs target name substitution)
+;; substitutes all the free ocurrencies of id 'name' in 'target' by 'substitution'
+(define (p-subst target name substitution)
+  (match target
+    [(tt) (tt)]
+    [(ff) (ff)]
+    [(p-id id) (if (equal? id name)
+                   substitution
+                   target)]
+    [(p-not prop) (p-not (p-subst prop name substitution))]
+    [(p-and prop-ls) (p-and (map (λ (prop) (p-subst prop name substitution)) prop-ls))]
+    [(p-or prop-ls) (p-or (map (λ (prop) (p-subst prop name substitution)) prop-ls))]
+    
+    ;; revisar
+    [(p-where body id named-prop) (if (equal? id name)
+                                     target
+                                     (p-where (p-subst body name substitution) id (p-subst named-prop name substitution)))]
+  )
+)
+
+;; no preocuparse acá de corto circuito de ands y ors, por tanto quiza vale la pena hacerle map a ands y ors con el mismo subst
+;; siguiendo la idea de la clase en donde se substituye recursivamente en la rama izq y derecha
+;; PARECE QUE SI SIRVE, TESTEAR MÁS
 
 
 ;;----- ;;
@@ -133,8 +155,11 @@ Concrete syntax of propositions:
                         (ttV))]
     [(p-and prop-ls) (eval-and prop-ls)]
     [(p-or prop-ls) (eval-or prop-ls)]
-    ;; p-id case
     ;; where case
+    [(p-where body id named-prop) 
+      (p-eval (p-subst body id (p-eval named-prop)))] ;; sgy no es necesario castear a PValue
+    ;; p-id case
+    [(p-id name) (error 'p-eval "Open expression (free occurrence of p-id ~a)" name)]
   )
 )
 

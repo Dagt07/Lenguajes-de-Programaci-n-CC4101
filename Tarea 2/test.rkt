@@ -1,7 +1,7 @@
 #lang play
 (require "t2.rkt")
 
-;;(print-only-errors #t)
+(print-only-errors #t)
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
@@ -43,8 +43,8 @@
 
 ;; id & where
 (test (parse-prop 'x) (p-id 'x))
-;;(test (parse-prop '{false where {x true}}) (p-where (ff) 'x (tt)) )
-;;(test (parse-prop '{x where {x true}}) (p-where (p-id 'x) 'x (tt)) )
+(test (parse-prop '{false where [x true]}) (p-where (ff) 'x (tt)) )
+(test (parse-prop '{x where [x true]}) (p-where (p-id 'x) 'x (tt)) )
 
 ;; ----- Parte c) -----
 
@@ -53,13 +53,36 @@
 
 ;; ----- Parte d) -----
 
+(test (p-subst (p-id 'x) 'x (tt)) (tt) )
+(test (p-subst (p-id 'x) 'x (p-not (tt))) (p-not (tt)) )
+(test (p-subst (p-id 'x) 'y (tt)) (p-id 'x) )
+(test (p-subst (p-id 'x) 'y (p-not (tt))) (p-id 'x) )
+(test (p-subst (p-id 'x) 'x (p-and (list (tt) (ff)))) (p-and (list (tt) (ff))) )
+(test (p-subst (p-id 'x) 'x (p-or (list (tt) (ff)))) (p-or (list (tt) (ff))) )
+
+(test (p-subst (p-and (list (p-id 'x) (tt))) 'x (tt)) (p-and (list (tt) (tt))) )
+(test (p-subst (p-or (list (p-id 'x) (tt))) 'x (tt)) (p-or (list (tt) (tt))) )
+
+(test (p-subst (p-where (p-id 'x) 'x (tt)) 'x (ff)) (p-where (p-id 'x) 'x (tt)) ) ;; no es ocurrencia libre por ende nos quedamos con el where interno
+(test (p-subst (p-where (p-id 'x) 'y (tt)) 'x (ff)) (p-where (ff) 'y (tt)) ) ;; ocurrencia x libre, se reemplaza
 
 ;; ----- Parte e) -----
 
+;; testing directly from a well constructed AST
 (test (p-eval (tt)) (ttV)) 
 (test (p-eval (ff)) (ffV)) 
 (test (p-eval (p-not (tt))) (ffV) )
 (test (p-eval (p-not (ff))) (ttV) )
+(test (p-eval (p-not (p-not (tt)))) (ttV) )
+
+;; testing from concrete syntax (using the parser)
+(test (p-eval (parse-prop 'true)) (ttV) )
+(test (p-eval (parse-prop 'false)) (ffV) )
+(test (p-eval (parse-prop '{not true})) (ffV) )
+(test (p-eval (parse-prop '{not false})) (ttV) )
+(test (p-eval (parse-prop '{not {not true}})) (ttV) )
+
+;; for this point on, we will use the parser to make writing tests easier and double checking the parser.
 
 ;;------------ ;;
 ;;==== P2 ==== ;;
