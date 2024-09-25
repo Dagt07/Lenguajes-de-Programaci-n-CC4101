@@ -20,7 +20,6 @@
 (test (parse-prop '{not false}) (p-not (ff)) )
 (test (parse-prop '{not {not true}}) (p-not (p-not (tt))) )
 
-
 ;; and & or
 (test (parse-prop '{and true false}) (p-and (list (tt) (ff))) )
 (test (parse-prop '{and true false true}) (p-and (list (tt) (ff) (tt))) )
@@ -45,6 +44,16 @@
 (test (parse-prop 'x) (p-id 'x))
 (test (parse-prop '{false where [x true]}) (p-where (ff) 'x (tt)) )
 (test (parse-prop '{x where [x true]}) (p-where (p-id 'x) 'x (tt)) )
+(test (parse-prop '{{z where [y true]} where [z {not false}]}) (p-where (p-where (p-id 'z) 'y (tt)) 'z (p-not (ff))) )
+
+;; all together
+(test (parse-prop '{and true true {x where [x true]}}) (p-and (list (tt) (tt) (p-where (p-id 'x) 'x (tt)))) )
+(test (parse-prop '{or false {not false} {x where [x true]}}) 
+        (p-or (list (ff) (p-not (ff)) (p-where (p-id 'x) 'x (tt)))) )
+(test (parse-prop '{or {and false true false} true {x where [x true]}}) 
+        (p-or (list (p-and (list (ff) (tt) (ff))) (tt) (p-where (p-id 'x) 'x (tt)))) )
+(test (parse-prop '{{and x true {not {and false {y where [y true]}}}} where [x {or true false}]})
+        (p-where (p-and (list (p-id 'x) (tt) (p-not (p-and (list (ff) (p-where (p-id 'y) 'y (tt))))))) 'x (p-or (list (tt) (ff)))))
 
 ;; ----- Parte c) -----
 
@@ -63,8 +72,9 @@
 (test (p-subst (p-and (list (p-id 'x) (tt))) 'x (tt)) (p-and (list (tt) (tt))) )
 (test (p-subst (p-or (list (p-id 'x) (tt))) 'x (tt)) (p-or (list (tt) (tt))) )
 
-(test (p-subst (p-where (p-id 'x) 'x (tt)) 'x (ff)) (p-where (p-id 'x) 'x (tt)) ) ;; no es ocurrencia libre por ende nos quedamos con el where interno
-(test (p-subst (p-where (p-id 'x) 'y (tt)) 'x (ff)) (p-where (ff) 'y (tt)) ) ;; ocurrencia x libre, se reemplaza
+(test (p-subst (p-where (p-id 'x) 'x (tt)) 'x (ff)) (p-where (p-id 'x) 'x (tt)) ) ;; inner x is not a free ocurrence of x, so its not replaced
+(test (p-subst (p-where (p-id 'x) 'y (tt)) 'x (ff)) (p-where (ff) 'y (tt)) ) ;; free ocurrence of x, then its replaced
+(test (p-subst (parse-prop '{z where [y true]}) 'z (ff)) (parse-prop '{false where [y true]}) )
 
 ;; ----- Parte e) -----
 
@@ -83,6 +93,14 @@
 (test (p-eval (parse-prop '{not {not true}})) (ttV) )
 
 ;; for this point on, we will use the parser to make writing tests easier and double checking the parser.
+
+(test (p-eval (parse-prop '{x where [x true]}))  (ttV) )
+(test (p-eval (parse-prop '{{z where [y true]} where [z false]})) (ffV) )
+(test (p-eval (parse-prop '{{z where [y true]} where [z {not false}]})) (ttV) )
+
+(test/exn (p-eval (parse-prop 'x)) "Open expression (free occurrence of p-id x)" )
+(test/exn (p-eval (parse-prop '{x where [y true]})) "Open expression (free occurrence of p-id x)" )
+(test/exn (p-eval (parse-prop '{{z where [y true]} where [z {not y}]}) ) "Open expression (free occurrence of p-id y)" ) ;; for '(not y) y is undefined 
 
 ;;------------ ;;
 ;;==== P2 ==== ;;

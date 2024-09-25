@@ -94,7 +94,7 @@ Concrete syntax of propositions:
 )
 
 ;; from-Pvalue : PValue -> Prop
-;; captures a PValue and returns the corresponding Prop with pvalues instead of prop "boolean" values
+;; captures a PValue and returns the corresponding Prop with prop "boolean" value instead of PValue
 (define (from-Pvalue p-value) 
   (match p-value
     [(ttV) (tt)]
@@ -120,18 +120,13 @@ Concrete syntax of propositions:
     [(p-not prop) (p-not (p-subst prop name substitution))]
     [(p-and prop-ls) (p-and (map (λ (prop) (p-subst prop name substitution)) prop-ls))]
     [(p-or prop-ls) (p-or (map (λ (prop) (p-subst prop name substitution)) prop-ls))]
-    
-    ;; revisar
-    [(p-where body id named-prop) (if (equal? id name)
-                                     target
-                                     (p-where (p-subst body name substitution) id (p-subst named-prop name substitution)))]
+    ;; where case
+    [(p-where body id named-prop) 
+      (if (equal? id name) ;; name (what we want to subst) vs id (ocurrence we found, aka, inner id)
+        target ;; it wasnt a free ocurrence, we dont substitute
+        (p-where (p-subst body name substitution) id (p-subst named-prop name substitution)))]
   )
 )
-
-;; no preocuparse acá de corto circuito de ands y ors, por tanto quiza vale la pena hacerle map a ands y ors con el mismo subst
-;; siguiendo la idea de la clase en donde se substituye recursivamente en la rama izq y derecha
-;; PARECE QUE SI SIRVE, TESTEAR MÁS
-
 
 ;;----- ;;
 ;; P1.e ;;
@@ -157,7 +152,7 @@ Concrete syntax of propositions:
     [(p-or prop-ls) (eval-or prop-ls)]
     ;; where case
     [(p-where body id named-prop) 
-      (p-eval (p-subst body id (p-eval named-prop)))] ;; sgy no es necesario castear a PValue
+      (p-eval (p-subst body id (from-Pvalue (p-eval named-prop))))]
     ;; p-id case
     [(p-id name) (error 'p-eval "Open expression (free occurrence of p-id ~a)" name)]
   )
