@@ -1,7 +1,7 @@
 #lang play
 (require "t2.rkt")
 
-;;(print-only-errors #t)
+(print-only-errors #t)
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
@@ -53,7 +53,7 @@
 (test (parse-prop '{or {and false true false} true {x where [x true]}}) 
         (p-or (list (p-and (list (ff) (tt) (ff))) (tt) (p-where (p-id 'x) 'x (tt)))) )
 (test (parse-prop '{{and x true {not {and false {y where [y true]}}}} where [x {or true false}]})
-        (p-where (p-and (list (p-id 'x) (tt) (p-not (p-and (list (ff) (p-where (p-id 'y) 'y (tt))))))) 'x (p-or (list (tt) (ff)))))
+        (p-where (p-and (list (p-id 'x) (tt) (p-not (p-and (list (ff) (p-where (p-id 'y) 'y (tt))))))) 'x (p-or (list (tt) (ff)))) )
 
 ;; ----- Parte c) -----
 
@@ -133,11 +133,51 @@
 ;; id & with
 (test (parse 'x) (id 'x))
 
-
 ;; all together
 
 ;; ----- Parte c) -----
 
+;; from-CValue
+(test (from-CValue (compV 1 0)) (real 1) )
+(test (from-CValue (compV 0 1)) (imaginary 1) )
+(test (from-CValue (compV 0 -2)) (imaginary -2))
+(test (from-CValue (compV 0 0)) (add (real 0) (imaginary 0)) )
+(test (from-CValue (compV 1 2)) (add (real 1) (imaginary 2)) )
+(test (from-CValue (compV -1 -4)) (add (real -1) (imaginary -4)) )
+
+(test/exn (from-CValue 'x) "Invalid CValue" )
+(test/exn (from-CValue '()) "Invalid CValue" )
+(test/exn (from-CValue '(1 2 3 4 5)) "Invalid CValue" )
+
+;; cmplx+
+(test (cmplx+ (compV 1 2) (compV 3 4)) (compV 4 6) )
+(test (cmplx+ (compV 10 0) (compV 5 0)) (compV 15 0) )
+(test (cmplx+ (compV 0 10) (compV 0 5)) (compV 0 15) )
+(test (cmplx+ (compV 0 0) (compV 0 0)) (compV 0 0) )
+
+;; cmplx-
+(test (cmplx- (compV 1 2) (compV 3 4)) (compV -2 -2) )
+(test (cmplx- (compV 10 0) (compV 5 0)) (compV 5 0) )
+(test (cmplx- (compV 0 10) (compV 0 5)) (compV 0 5) )
+(test (cmplx- (compV 0 0) (compV 0 0)) (compV 0 0) )
+
+;; cmplx0?
+(test (cmplx0? (compV 0 0)) #t)
+(test (cmplx0? (compV 1 0)) #f)
+(test (cmplx0? (compV 0 1)) #f)
+(test (cmplx0? (compV 1 1)) #f)
+(test (cmplx0? (cmplx+ (compV 0 0) (compV 0 0))) #t)
+(test (cmplx0? (cmplx+ (compV 4 -4) (compV -4 4))) #t)
+(test (cmplx0? (cmplx+ (compV -4 -2) (compV -6 -3))) #f)
+(test (cmplx0? (cmplx- (compV 0 0) (compV 0 0))) #t)
+(test (cmplx0? (cmplx- (compV 2 3) (compV 2 3))) #t)
+(test (cmplx0? (cmplx- (compV 3 2) (compV 4 1))) #f)
+
+;; --- auxiliary functions ---
+(test (cvalue-real (compV 1 2)) 1)
+(test (cvalue-real (compV 0 3)) 0)
+(test (cvalue-imaginary (compV 1 2)) 2)
+(test (cvalue-imaginary (compV 3 0)) 0)
 
 ;; ----- Parte d) -----
 

@@ -122,7 +122,7 @@ Concrete syntax of propositions:
     [(p-or prop-ls) (p-or (map (λ (prop) (p-subst prop name substitution)) prop-ls))]
     ;; where case
     [(p-where body id named-prop) 
-      (if (equal? id name) ;; name (what we want to subst) vs id (ocurrence we found, aka, inner id)
+      (if (equal? id name) ;; name (what we want to subst) vs id (ocurrence we found, ie, inner id)
         target ;; it wasnt a free ocurrence, we dont substitute
         (p-where (p-subst body name substitution) id (p-subst named-prop name substitution)))]
   )
@@ -167,11 +167,9 @@ Concrete syntax of propositions:
   ;; another expression, ie, (imaginary (add 1 1) 'i) is not a valid expression
 |#
 
- 
 ;;----- ;;
 ;; P2.a ;;
 ;;----- ;;
-
 
 #|
 Abstract syntax of expretions:
@@ -220,47 +218,84 @@ Concrete syntax of expressions:
     [(list '+ l-sexpr r-sexpr) (add (parse l-sexpr) (parse r-sexpr))]
     [(list '- l-sexpr r-sexpr) (sub (parse l-sexpr) (parse r-sexpr))]
     [(list 'if0 c-sexpr t-sexpr f-sexpr)
-     (if0 (parse c-sexpr) (parse t-sexpr) (parse f-sexpr))]
+      (if0 (parse c-sexpr) (parse t-sexpr) (parse f-sexpr))]
+    ;; with * case
     ;;[(list 'with bindings body)
-    ;; (with (map (λ (binding) (match binding
-    ;;                            [(list (? symbol? x) named-expr) (x (parse named-expr))]))
-    ;;            bindings)
-    ;;       (parse body))]
+    ;;  (with (map (λ (binding) (match binding
+    ;;                            [(list (? symbol? name) expr) (id name)]
+    ;;                            [else (error 'parse "Invalid binding")]))
+    ;;             bindings)
+    ;;        (parse body))]
     [(? symbol? name) (id name)]
   )
 )
-
-
 
 ;;----- ;;
 ;; P2.c ;;
 ;;----- ;;
 
-;; subst :: Expr Symbol Expr -> Expr
-(define (subst in what for) '???)
-
-;;----- ;;
-;; P2.d ;;
-;;----- ;;
-
 #|
+BNF for CValue
+abstraction to represent Complex values for not depending on the language used
 <cvalue> ::= (compV <num> <num>)
 |#
 
 (deftype CValue (compV r i))
 
 ;; from-CValue :: CValue -> Expr
-(define (from-CValue v) '???)
+;; captures a CValue (ComplexValue) and returns the corresponding Expr (AST)
+(define (from-CValue v)
+  (match v
+    [(compV r i) (cond [(and (zero? i) (not (zero? r))) (real r)]
+                       [(and (zero? r) (not (zero? i))) (imaginary i)]
+                       [else (add (real r) (imaginary i))] )]
+    [_ (error 'from-CValue "Invalid CValue")]
+  )
+)
+
+;; --- auxiliary functions ---
+;; cvalue-real :: CValue -> Num
+;; returns the real part of a complex number
+(define (cvalue-real cvalue)
+  (match cvalue
+    [(compV r i) r]))
+
+;; cvalue-imaginary :: CValue -> Num
+;; returns the imaginary part of a complex number
+(define (cvalue-imaginary cvalue)
+  (match cvalue
+    [(compV r i) i]))
+;; ---------------------------
 
 ;; cmplx+ :: CValue CValue -> CValue
-(define (cmplx+ v1 v2) '???)
+;; adds two complex numbers
+(define (cmplx+ v1 v2) 
+  (compV (+ (cvalue-real v1) (cvalue-real v2))
+         (+ (cvalue-imaginary v1) (cvalue-imaginary v2)))
+)
 
 ;; cmplx- :: CValue CValue -> CValue
-(define (cmplx- v1 v2) '???)
+;; subtracts two complex numbers
+(define (cmplx- v1 v2)
+  (compV (- (cvalue-real v1) (cvalue-real v2))
+         (- (cvalue-imaginary v1) (cvalue-imaginary v2)))
+)
 
 ;; cmplx0? :: CValue -> Boolean
-(define (cmplx0? v) '???)
+;; returns a boolean indicating if the complex number is 0, ie, real and imaginary parts are 0
+(define (cmplx0? v)
+  (match (from-CValue v) 
+    [(add (real 0) (imaginary 0)) #t]
+    [_ #f]
+  )
+)
 
+;;----- ;;
+;; P2.d ;;
+;;----- ;;
+
+;; subst :: Expr Symbol Expr -> Expr
+(define (subst in what for) '???)
 
 ;;----- ;;
 ;; P2.e ;;
