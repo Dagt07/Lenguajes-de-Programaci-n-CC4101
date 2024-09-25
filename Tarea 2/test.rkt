@@ -1,7 +1,7 @@
 #lang play
 (require "t2.rkt")
 
-(print-only-errors #t)
+;;(print-only-errors #t)
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
@@ -112,6 +112,29 @@
 
 ;; ----- Parte b) -----
 
+;; basic types
+(test (parse '1) (real 1))
+(test (parse '{1 i}) (imaginary 1))
+
+;; + & -
+(test (parse '{+ 1 2}) (add (real 1) (real 2)))
+(test (parse '{- 2 1}) (sub (real 2) (real 1)))
+(test (parse '{+ 1 {2 i}}) (add (real 1) (imaginary 2)))
+(test (parse '{+ {2 i} 1}) (add (imaginary 2) (real 1)))
+(test (parse '{- 1 {2 i}}) (sub (real 1) (imaginary 2)))
+(test (parse '{- {2 i} 1}) (sub (imaginary 2) (real 1)))
+(test (parse '{+ {- 3 4} {+ 5 9}}) (add (sub (real 3) (real 4)) (add (real 5) (real 9))))
+
+;; if0
+(test (parse '{if0 0 1 2}) (if0 (real 0) (real 1) (real 2)))
+(test (parse '{if0 {+ 1 1} 1 {2 i}}) (if0 (add (real 1) (real 1)) (real 1) (imaginary 2)))
+(test (parse '{if0 {if0 0 {3 i} 2} 1 {2 i}}) (if0 (if0 (real 0) (imaginary 3) (real 2)) (real 1) (imaginary 2)))
+
+;; id & with
+(test (parse 'x) (id 'x))
+
+
+;; all together
 
 ;; ----- Parte c) -----
 

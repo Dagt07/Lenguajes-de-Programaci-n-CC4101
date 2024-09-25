@@ -162,25 +162,37 @@ Concrete syntax of propositions:
 ;;==== P2 ==== ;;
 ;;------------ ;;
 
+#| Notes:
+ - Aux said: dont consider the case where the real part of a imaginary number <num> its 
+  ;; another expression, ie, (imaginary (add 1 1) 'i) is not a valid expression
+|#
+
+ 
 ;;----- ;;
 ;; P2.a ;;
 ;;----- ;;
 
 
 #|
-<expr> ::= ...
+Abstract syntax of expretions:
+
+<expr> ::= (real <num>)
+        | (imaginary <num>) 
         | (add <expr> <expr>)
         | (sub <expr> <expr>)
         | (if0 <expr> <expr> <expr>)
-        | ...
+        | (with <expr> <expr>)
+        | (id <sym>)
 |#
 (deftype Expr
-  ; ...
+  (real r)
+  (imaginary r)
   (add l r)
   (sub l r)
   (if0 c t f)
-  ; ...
-  )
+  (with bindings body)
+  (id name)
+)
 
 ;;----- ;;
 ;; P2.b ;;
@@ -189,16 +201,36 @@ Concrete syntax of propositions:
 #|
 Concrete syntax of expressions:
 
-<s-expr> ::= ...
-        | (+ <s-expr> <s-expr>)
-        | (- <s-expr> <s-expr>)
-        | (if0 <s-expr> <s-expr> <s-expr>)
-        | ...
+<s-expr> ::= 
+        | <num>
+        | (<num> 'i)
+        | (list '+ <s-expr> <s-expr>)
+        | (list '- <s-expr> <s-expr>)
+        | (list 'if0 <s-expr> <s-expr> <s-expr>)
+        | (list 'with (list (list <sym> <s-expr>)) <s-expr> <s-expr>)
+        | <sym>
 |#
 
 ;; parse : <s-expr> -> Expr
+;; parses a s-expretion into a Expr, ie, constructs the AST
+(define (parse s-expr)
+  (match s-expr
+    [(? number? n) (real n)]
+    [(list n 'i) #:when (number? n) (imaginary n)]
+    [(list '+ l-sexpr r-sexpr) (add (parse l-sexpr) (parse r-sexpr))]
+    [(list '- l-sexpr r-sexpr) (sub (parse l-sexpr) (parse r-sexpr))]
+    [(list 'if0 c-sexpr t-sexpr f-sexpr)
+     (if0 (parse c-sexpr) (parse t-sexpr) (parse f-sexpr))]
+    ;;[(list 'with bindings body)
+    ;; (with (map (λ (binding) (match binding
+    ;;                            [(list (? symbol? x) named-expr) (x (parse named-expr))]))
+    ;;            bindings)
+    ;;       (parse body))]
+    [(? symbol? name) (id name)]
+  )
+)
 
-(define (parse s-expr) '???)
+
 
 ;;----- ;;
 ;; P2.c ;;
