@@ -3,7 +3,7 @@
 #|
 Hizo Ud uso de la whiteboard policy: (Indique SI/NO)
 En caso que afirmativo, indique con quién y sobre qué ejercicio:
--
+- Jean Paul Duchens, P1.e 
 -
 |#
 
@@ -128,10 +128,18 @@ Concrete syntax of propositions:
 ;;----- ;;
 
 ;; eval-or : (Listof Prop) -> PValue
-(define (eval-or ps) '???)
+(define (eval-or ps)
+  (cond
+    [(null? ps) (ffV)]
+    [(equal? (p-eval (car ps)) (ttV)) (ttV)]
+    [else (eval-or (cdr ps))]))
 
 ;; eval-and : (Listof Prop) -> PValue
-(define (eval-and ps) '???)
+(define (eval-and ps)
+  (cond
+    [(null? ps) (ttV)]
+    [(equal? (p-eval (car ps)) (ffV)) (ffV)]
+    [else (eval-and (cdr ps))]))
 
 ;; p-eval :: Prop(AS) -> PValue
 ;; Evaluates a proposition, aka, the interpreter.
@@ -292,12 +300,68 @@ abstraction to represent Complex values for not depending on the language used
 ;; P2.d ;;
 ;;----- ;;
 
+;; subst : una auxiliar, luego con un map car, member
+
 ;; subst :: Expr Symbol Expr -> Expr
-(define (subst in what for) '???)
+;; (subst in what for)
+;; substitutes all the free ocurrencies of id 'what' in 'in' by 'for'
+(define (subst in what for) 
+
+  ;; auxiliary function
+  ;; append y esas cosas, ver aux 5
+  (define (subst-aux bindings what for)
+    (match bindings
+      ['() '()] ;;caso base
+      [(list (cons x expr) elemes ...)
+        (if (equal? x what) ;; si se le está haciendo shadowing
+          (append (list (cons x expr)) elemes) ;; no se hace la sustitución
+          (append (list (cons x (subst expr what for))) (subst-aux elemes what for) ) ;; se hace la sustitución
+        )
+      ]
+    )
+  )
+
+  (match in
+  
+    [(real n) (real n)]
+    [(imaginary n) (imaginary n)]
+    [(add l r) (add (subst l what for) (subst r what for))]
+    [(sub l r) (sub (subst l what for) (subst r what for))]
+    [(if0 c t f) (if0 (subst c what for) (subst t what for) (subst f what for))]
+    [(id x) (if (symbol=? x what) for (id x))]
+    [(with bindings body) ;;bindings its a list of (list <sym> <expr>)
+      (define listaux (subst-aux bindings what for))
+      (with 
+            listaux
+            ;; como la func shadowing
+            ;; acá verifica si se hizo la sustitución en alguna de las bindings
+            (if (member what (map car listaux)) ;; nos da el id de cada (list <sym> <expr>)
+                body 
+                (subst body what for))
+      )
+    ]
+  )
+)
 
 ;;----- ;;
 ;; P2.e ;;
 ;;----- ;;
 
 ;; interp : Expr -> CValue
-(define (interp expr) '???)
+;; Evaluates an arithmetic expression
+(define (interp expr) 
+  (match expr
+    [(real n) (compV n 0)]
+    [(imaginary n) (compV 0 n)]
+    [(add l-expr r-expr) (cmplx+ (interp l-expr) (interp r-expr))]
+    [(sub l-expr r-expr) (cmplx- (interp l-expr) (interp r-expr))]
+    [(if0 c t f) (if (cmplx0? (interp c)) 
+                    (interp t)
+                    (interp f))]
+    ;; with case
+    [(with bindings body) 
+      (interp (foldl (λ (binding body) (subst body (car binding) (interp (cdr binding)))) body bindings))
+    ]
+    [(id x) (error 'interp "Open expression (free occurrence of id ~a)" x)] ;; quiza haya que cambiarla pero no creo
+  )
+)

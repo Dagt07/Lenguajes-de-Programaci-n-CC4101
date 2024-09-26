@@ -91,12 +91,15 @@
 (test (p-eval (parse-prop '{not true})) (ffV) )
 (test (p-eval (parse-prop '{not false})) (ttV) )
 (test (p-eval (parse-prop '{not {not true}})) (ttV) )
+(test (p-eval (parse-prop '{or false false true})) (ttV))
+(test (p-eval (parse-prop '{and true false true true})) (ffV))
 
 ;; for this point on, we will use the parser to make writing tests easier and double checking the parser.
-
 (test (p-eval (parse-prop '{x where [x true]}))  (ttV) )
+(test (p-eval (parse-prop '{and true {not {not true}} {x where [x true]}})) (ttV) )
 (test (p-eval (parse-prop '{{z where [y true]} where [z false]})) (ffV) )
 (test (p-eval (parse-prop '{{z where [y true]} where [z {not false}]})) (ttV) )
+(test (p-eval (parse-prop '{{z where [y true]} where [z {not {or false true}}]})) (ffV) )
 
 (test/exn (p-eval (parse-prop 'x)) "Open expression (free occurrence of p-id x)" )
 (test/exn (p-eval (parse-prop '{x where [y true]})) "Open expression (free occurrence of p-id x)" )
@@ -188,5 +191,29 @@
 
 ;; ----- Parte d) -----
 
+;; no shadowing
+(test (subst (parse '(with [(x 2) (y z)] (+ x z))) 'z (real 1)) 
+        (with ( list (cons 'x (real 2)) (cons 'y (real 1))) (add (id 'x) (real 1))) )
+;; shadowing
+(test (subst (parse '(with [(x 2) (y x)] (+ x x))) 'x (real 1))
+        (with ( list (cons 'x (real 2)) (cons 'y (id 'x))) (add (id 'x) (id 'x))) )
 
 ;; ----- Parte e) -----
+
+(test (interp (parse '1)) (compV 1 0) )
+(test (interp (parse '{2 i})) (compV 0 2) )
+(test (interp (parse '{+ 1 2})) (compV 3 0) )
+(test (interp (parse '{+ 1 {2 i}})) (compV 1 2) )
+(test (interp (parse '{- 1 {2 i}})) (compV 1 -2) )
+(test (interp (parse '{+ {- 3 4} {+ 5 9}})) (compV 13 0) )
+
+(test (interp (parse '{if0 1 2 3})) (compV 3 0) ) ;; cond is false, then return false branch (3)
+(test (interp (parse '{if0 {+ 0 {0 i}} 1 0})) (compV 1 0) ) ;; cond is true, then return true branch (1)
+(test (interp (parse '{if0 {+ 0 {1 i}} 1 {2 i}})) (compV 0 2) ) 
+(test (interp (parse '{if0 {- {+ 2 {2 i}} {+ 2 {2 i}}} 1 {2 i}})) (compV 1 0) )
+
+;;(test (interp (parse '(with ((x 2) (y (5 i))) (+ x y)))) (compV 2 5) )
+;;(test (interp (parse '(with ((x 3)) (with ((x (4 i))) (+ x x))))) (compV 0 8))
+;;(test (interp (parse '(if0 0 (5 i) 5))) (compV 0 5))
+;;(test (interp (parse '(if0 0 (with ((x (3 i))) (+ x 2)) x))) (compV 2 3))
+;;(test (interp (parse '(with ((x 1) (x 2)) x))) (compV 2 0))  ; sobre-escritura
