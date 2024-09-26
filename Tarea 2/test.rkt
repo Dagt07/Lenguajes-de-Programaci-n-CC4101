@@ -31,10 +31,10 @@
 (test (parse-prop '{or false {not false}}) (p-or (list (ff) (p-not (ff)))) )
 (test (parse-prop '{or {or false true false} true false}) (p-or (list (p-or (list (ff) (tt) (ff))) (tt) (ff))) )
 
-(test/exn (parse-prop '{and}) "and expects at least two operands")
-(test/exn (parse-prop '{or}) "or expects at least two operands")
-(test/exn (parse-prop '{and true}) "and expects at least two operands")
-(test/exn (parse-prop '{or false}) "or expects at least two operands")
+(test/exn (parse-prop '{and}) "and expects at least two operands" )
+(test/exn (parse-prop '{or}) "or expects at least two operands" )
+(test/exn (parse-prop '{and true}) "and expects at least two operands" )
+(test/exn (parse-prop '{or false}) "or expects at least two operands" )
 (test/exn (parse-prop '{and {and true} false}) "and expects at least two operands" )
 (test/exn (parse-prop '{or {or false} true}) "or expects at least two operands" )
 (test/exn (parse-prop '{and {or true} true true}) "or expects at least two operands" )
@@ -117,23 +117,30 @@
 (test (parse '{1 i}) (imaginary 1))
 
 ;; + & -
-(test (parse '{+ 1 2}) (add (real 1) (real 2)))
-(test (parse '{- 2 1}) (sub (real 2) (real 1)))
-(test (parse '{+ 1 {2 i}}) (add (real 1) (imaginary 2)))
-(test (parse '{+ {2 i} 1}) (add (imaginary 2) (real 1)))
-(test (parse '{- 1 {2 i}}) (sub (real 1) (imaginary 2)))
-(test (parse '{- {2 i} 1}) (sub (imaginary 2) (real 1)))
-(test (parse '{+ {- 3 4} {+ 5 9}}) (add (sub (real 3) (real 4)) (add (real 5) (real 9))))
+(test (parse '{+ 1 2}) (add (real 1) (real 2)) )
+(test (parse '{- 2 1}) (sub (real 2) (real 1)) )
+(test (parse '{+ 1 {2 i}}) (add (real 1) (imaginary 2)) )
+(test (parse '{+ {2 i} 1}) (add (imaginary 2) (real 1)) )
+(test (parse '{- 1 {2 i}}) (sub (real 1) (imaginary 2)) )
+(test (parse '{- {2 i} 1}) (sub (imaginary 2) (real 1)) )
+(test (parse '{+ {- 3 4} {+ 5 9}}) (add (sub (real 3) (real 4)) (add (real 5) (real 9))) )
 
 ;; if0
-(test (parse '{if0 0 1 2}) (if0 (real 0) (real 1) (real 2)))
-(test (parse '{if0 {+ 1 1} 1 {2 i}}) (if0 (add (real 1) (real 1)) (real 1) (imaginary 2)))
-(test (parse '{if0 {if0 0 {3 i} 2} 1 {2 i}}) (if0 (if0 (real 0) (imaginary 3) (real 2)) (real 1) (imaginary 2)))
+(test (parse '{if0 0 1 2}) (if0 (real 0) (real 1) (real 2)) )
+(test (parse '{if0 {+ 1 1} 1 {2 i}}) (if0 (add (real 1) (real 1)) (real 1) (imaginary 2)) )
+(test (parse '{if0 {if0 0 {3 i} 2} 1 {2 i}}) (if0 (if0 (real 0) (imaginary 3) (real 2)) (real 1) (imaginary 2)) )
 
 ;; id & with
-(test (parse 'x) (id 'x))
+(test (parse 'x) (id 'x) )
+(test (parse '{with [{x 1} {y 1}] {+ x y}}) (with (list (cons 'x (real 1)) (cons 'y (real 1))) (add (id 'x) (id 'y))) )
+(test (parse '{with [{x z} {y 3}] {+ x y}}) (with (list (cons 'x (id 'z)) (cons 'y (real 3))) (add (id 'x) (id 'y))) )
+(test (parse '{with [{x 4} {y (2 i)} {z x1}] {+ x y}}) (with (list (cons 'x (real 4)) (cons 'y (imaginary 2)) (cons 'z (id 'x1))) (add (id 'x) (id 'y))) )
+
+(test/exn (parse '{with [] 1}) "with expects at least one binding" )
 
 ;; all together
+(test (parse '{with [{x {1 i}} {y {if0 {+ 0 {-1 i}} {0 i} {- x 1}}}] {+ x y}})
+      (with (list (cons 'x (imaginary 1)) (cons 'y (if0 (add (real 0) (imaginary -1)) (imaginary 0) (sub (id 'x) (real 1))))) (add (id 'x) (id 'y))) )
 
 ;; ----- Parte c) -----
 

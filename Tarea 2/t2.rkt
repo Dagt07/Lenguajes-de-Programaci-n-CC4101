@@ -1,23 +1,19 @@
 #lang play
 
 #|
-
 Hizo Ud uso de la whiteboard policy: (Indique SI/NO)
 En caso que afirmativo, indique con quién y sobre qué ejercicio:
 -
 -
-
 |#
 
 ;;------------ ;;
 ;;==== P1 ==== ;;
 ;;------------ ;;
 
-
 ;;----- ;;
 ;; P1.a ;;
 ;;----- ;;
-
 
 #|
 Abstract syntax of propositions:
@@ -106,7 +102,6 @@ Concrete syntax of propositions:
 ;; P1.d ;;
 ;;----- ;;
 
-
 ;; p-subst : Prop Symbol Prop -> Prop
 ;; (subs target name substitution)
 ;; substitutes all the free ocurrencies of id 'name' in 'target' by 'substitution'
@@ -131,7 +126,6 @@ Concrete syntax of propositions:
 ;;----- ;;
 ;; P1.e ;;
 ;;----- ;;
-
 
 ;; eval-or : (Listof Prop) -> PValue
 (define (eval-or ps) '???)
@@ -218,14 +212,18 @@ Concrete syntax of expressions:
     [(list '+ l-sexpr r-sexpr) (add (parse l-sexpr) (parse r-sexpr))]
     [(list '- l-sexpr r-sexpr) (sub (parse l-sexpr) (parse r-sexpr))]
     [(list 'if0 c-sexpr t-sexpr f-sexpr)
-      (if0 (parse c-sexpr) (parse t-sexpr) (parse f-sexpr))]
-    ;; with * case
-    ;;[(list 'with bindings body)
-    ;;  (with (map (λ (binding) (match binding
-    ;;                            [(list (? symbol? name) expr) (id name)]
-    ;;                            [else (error 'parse "Invalid binding")]))
-    ;;             bindings)
-    ;;        (parse body))]
+      (if0 (parse c-sexpr) (parse t-sexpr) (parse f-sexpr))] 
+    [(list 'with (list bindings ...) body) ;; with * case
+      (if (null? bindings)
+        (error 'parse "with expects at least one binding") 
+        ;; else (false branch)
+        (with 
+            (map (λ (binding) 
+              (match binding [(list (? symbol? name) named-expr) (cons name (parse named-expr))]) ) 
+            bindings) 
+          (parse body))
+      )
+    ]
     [(? symbol? name) (id name)]
   )
 )
