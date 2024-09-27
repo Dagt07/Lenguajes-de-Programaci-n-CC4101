@@ -192,11 +192,20 @@
 ;; ----- Parte d) -----
 
 ;; no shadowing
-(test (subst (parse '(with [(x 2) (y z)] (+ x z))) 'z (real 1)) 
+(test (subst (parse '{with [{x 2} {y z}] {+ x z}}) 'z {real 1}) 
         (with ( list (cons 'x (real 2)) (cons 'y (real 1))) (add (id 'x) (real 1))) )
+(test (subst (parse '{+ x y}) 'x (real 10)) (add (real 10) (id 'y)) )
+(test (subst (parse '{if0 x 1 0}) 'x (real 5)) (if0 (real 5) (real 1) (real 0)) )
+(test (subst (parse '{+ {- x 3} y}) 'x (real 2)) (add (sub (real 2) (real 3)) (id 'y)))
 ;; shadowing
-(test (subst (parse '(with [(x 2) (y x)] (+ x x))) 'x (real 1))
+(test (subst (parse '{with [{x 2} {y x}] {+ x x}}) 'x (real 1)) 
         (with ( list (cons 'x (real 2)) (cons 'y (id 'x))) (add (id 'x) (id 'x))) )
+(test (subst (parse '{if0 x {with [{x 2}] {+ x y}} z}) 'x (real 4)) 
+        (if0 (real 4) (with (list (cons 'x (real 2))) (add (id 'x) (id 'y))) (id 'z)) )
+(test (subst (parse '{with [{x 2}] {+ x {with [{x 3}] {+ x y}}}}) 'x (real 5))
+      (with (list (cons 'x (real 2))) (add (id 'x) (with (list (cons 'x (real 3))) (add (id 'x) (id 'y))))) )
+
+;; note: subst-aux is define inside subst, then is tested indirectly by the tests of subst
 
 ;; ----- Parte e) -----
 
@@ -212,8 +221,6 @@
 (test (interp (parse '{if0 {+ 0 {1 i}} 1 {2 i}})) (compV 0 2) ) 
 (test (interp (parse '{if0 {- {+ 2 {2 i}} {+ 2 {2 i}}} 1 {2 i}})) (compV 1 0) )
 
-;;(test (interp (parse '(with ((x 2) (y (5 i))) (+ x y)))) (compV 2 5) )
-;;(test (interp (parse '(with ((x 3)) (with ((x (4 i))) (+ x x))))) (compV 0 8))
-;;(test (interp (parse '(if0 0 (5 i) 5))) (compV 0 5))
-;;(test (interp (parse '(if0 0 (with ((x (3 i))) (+ x 2)) x))) (compV 2 3))
-;;(test (interp (parse '(with ((x 1) (x 2)) x))) (compV 2 0))  ; sobre-escritura
+(test (interp (parse '{with {{x 3}} {with {{x {4 i}}} {+ x x}}})) (compV 0 8) )
+(test (interp (parse '{if0 0 {with {{x {3 i}}} {+ x 2}} x})) (compV 2 3) )
+(test/exn (interp (parse 'x)) "Open expression (free occurrence of id x)" )

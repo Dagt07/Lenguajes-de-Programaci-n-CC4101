@@ -1,7 +1,7 @@
 #lang play
 
 #|
-Hizo Ud uso de la whiteboard policy: (Indique SI/NO)
+Hizo Ud uso de la whiteboard policy: SI
 En caso que afirmativo, indique con quién y sobre qué ejercicio:
 - Jean Paul Duchens, P1.e 
 -
@@ -21,7 +21,7 @@ Abstract syntax of propositions:
 <prop> ::= (tt)
          | (ff)
          | (p-not <prop>)
-         | (p-and listOf(prop)) ;; listOf<prop> ;; podría ir la elipsis acá mismo o * o listOf
+         | (p-and listOf(prop))
          | (p-or listOf(prop))
          | (p-where <prop> <symbol> <prop>)
          | (p-id <symbol>)
@@ -181,7 +181,7 @@ Abstract syntax of expretions:
         | (add <expr> <expr>)
         | (sub <expr> <expr>)
         | (if0 <expr> <expr> <expr>)
-        | (with <expr> <expr>)
+        | (with listOf(<expr>) <expr>)
         | (id <sym>)
 |#
 (deftype Expr
@@ -300,22 +300,18 @@ abstraction to represent Complex values for not depending on the language used
 ;; P2.d ;;
 ;;----- ;;
 
-;; subst : una auxiliar, luego con un map car, member
-
 ;; subst :: Expr Symbol Expr -> Expr
 ;; (subst in what for)
 ;; substitutes all the free ocurrencies of id 'what' in 'in' by 'for'
 (define (subst in what for) 
 
-  ;; auxiliary function
-  ;; append y esas cosas, ver aux 5
   (define (subst-aux bindings what for)
     (match bindings
-      ['() '()] ;;caso base
+      ['() '()] ;; base case
       [(list (cons x expr) elemes ...)
-        (if (equal? x what) ;; si se le está haciendo shadowing
-          (append (list (cons x expr)) elemes) ;; no se hace la sustitución
-          (append (list (cons x (subst expr what for))) (subst-aux elemes what for) ) ;; se hace la sustitución
+        (if (equal? x what) ;; if its getting shadowed
+          (append (list (cons x expr)) elemes) ;; doesnt make the substitution
+          (append (list (cons x (subst expr what for))) (subst-aux elemes what for) ) ;; make the substitution
         )
       ]
     )
@@ -333,9 +329,8 @@ abstraction to represent Complex values for not depending on the language used
       (define listaux (subst-aux bindings what for))
       (with 
             listaux
-            ;; como la func shadowing
-            ;; acá verifica si se hizo la sustitución en alguna de las bindings
-            (if (member what (map car listaux)) ;; nos da el id de cada (list <sym> <expr>)
+            ;; here we verify if the substitution was made in any of the bindings
+            (if (member what (map car listaux)) ;; it gives the id of (list <sym> <expr>)
                 body 
                 (subst body what for))
       )
@@ -360,8 +355,10 @@ abstraction to represent Complex values for not depending on the language used
                     (interp f))]
     ;; with case
     [(with bindings body) 
-      (interp (foldl (λ (binding body) (subst body (car binding) (interp (cdr binding)))) body bindings))
+      (define bindings-values (map (λ (binding) (interp (cdr binding))) bindings))
+      (define new-body (subst body (car (car bindings)) (from-CValue (car bindings-values))))
+      (interp new-body)
     ]
-    [(id x) (error 'interp "Open expression (free occurrence of id ~a)" x)] ;; quiza haya que cambiarla pero no creo
+    [(id x) (error 'interp "Open expression (free occurrence of id ~a)" x)]
   )
 )
