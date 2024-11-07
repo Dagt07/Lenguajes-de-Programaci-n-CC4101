@@ -13,16 +13,15 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 ;; P1.a, P1.e, P2.a ;;
 ;;------------------;;
 
-;; Abstract syntax of Expresions ;; Gramatica BNF 
-;;-------------a-------------;;
+;; Abstract syntax of Expressions ;; Gramatica BNF Expression
 
 #|
 <expr> ::= 
           ;;------------- 1.a -------------;;
           | (num <number>)
-          | (nil)
-          | (conz <expr> <expr>)
           | (and <expr> <expr>)
+          | (nil)
+          | (conz <expr> <expr>)   
           ;;------------- 1.e -------------;;
           ;;------------- 2.a -------------;;
 |#
@@ -33,38 +32,68 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
   (conz first_elem second_elem)  
 )
 
-
 ;;------------------;;
 ;; P1.b, P1.e, P2.b ;;
 ;;------------------;;
 
+#|
+;; Concrete syntax of expressions:
+<s-expr> ::= 
+          | num
+          | (list '+ <s-expr> <s-expr>)
+          | (list 'nil)
+          | (list 'conz <s-expr> <s-expr>)
+|#
 
 ;; parse : s-expr -> Expr
+;; parses a s-expression into a Expr, ie, constructs the AST
 (define (parse s-expr)
   (match s-expr
+    ;;------------- 1.b -------------;;
     [(? number? n) (num n)]
     [(list '+ l r) (add (parse l) (parse r))]
-    ; ...
-    ))
+    [(list 'nil) (nil)]
+    [(list 'cons first_elem second_elem) (conz (parse first_elem) (parse second_elem))]
+    [(list 'list x elems ...) (foldr (lambda (elem acc) (conz elem acc)) (nil) (cons (parse x) (map parse elems)))]
+    ;;------------- 1.e -------------;;
 
+    ;;------------- 2.b -------------;;
+  )
+)
 
 ;;----- ;;
 ;; P1.c ;;
 ;;----- ;;
 
+;; Abstract syntax of Patterns ;; Gramatica BNF Pattern
 #|
-<pattern> ::= ...
+<pattern> ::= 
+          | (numP <number>)
+          | (andP <pattern> <pattern>)
+          | (nilP)
+          | (conzP <pattern> <pattern>)
 |#
 (deftype Pattern
-  ; ...
-  )
+  (numP n)
+  (varP x)
+  (nilP)
+  (conzP first_pat second_pat)
+)
 
 ;;----- ;;
 ;; P1.d ;;
 ;;----- ;;
 
 ;; parse-pattern : s-expr -> Pattern
-(define (parse-pattern s-expr) '???)
+(define (parse-pattern s-expr)
+  (match s-expr
+    [(? number? n) (numP n)]
+    [(? symbol? x) (varP x)]
+    [(list 'nil) (nilP)]
+    [(list 'cons first_pat second_pat) (conzP (parse-pattern first_pat) (parse-pattern second_pat))]
+    [(list 'list x elems ...) (foldr (lambda (elem acc) (conzP elem acc)) (nilP) (cons (parse-pattern x) (map parse-pattern elems)))]
+  )
+)
 
 ;;----- ;;
 ;; P1.f ;;
