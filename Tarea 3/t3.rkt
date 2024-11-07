@@ -23,13 +23,19 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
           | (nil)
           | (conz <expr> <expr>)   
           ;;------------- 1.e -------------;;
+          | (id <symbol>)
+          | (fun <symbol> <expr>)
+          | (app <expr> <expr>)
           ;;------------- 2.a -------------;;
 |#
 (deftype Expr
   (num n)
+  (id x)
   (add l r)
   (nil)
-  (conz first_elem second_elem)  
+  (conz first_elem second_elem)
+  (fun arg body)
+  (app f arg)
 )
 
 ;;------------------;;
@@ -39,10 +45,15 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 #|
 ;; Concrete syntax of expressions:
 <s-expr> ::= 
+          ;------------- 1.b -------------;;
           | num
           | (list '+ <s-expr> <s-expr>)
           | (list 'nil)
           | (list 'conz <s-expr> <s-expr>)
+          ;;------------- 1.e -------------;;
+          | sym
+          | (list 'fun <sym> <s-expr>) ;; Son funciones unarias, por eso solo <sym> en lugar de (list <sym>)
+          | (list <s-expr> <s-expr>)
 |#
 
 ;; parse : s-expr -> Expr
@@ -56,7 +67,9 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
     [(list 'cons first_elem second_elem) (conz (parse first_elem) (parse second_elem))]
     [(list 'list x elems ...) (foldr (lambda (elem acc) (conz elem acc)) (nil) (cons (parse x) (map parse elems)))]
     ;;------------- 1.e -------------;;
-
+    [(? symbol? x) (id x)]
+    [(list 'fun x body) (fun (parse-pattern x) (parse body))]
+    [(list f a) (app (parse f) (parse a))]
     ;;------------- 2.b -------------;;
   )
 )
@@ -85,6 +98,7 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 ;;----- ;;
 
 ;; parse-pattern : s-expr -> Pattern
+;; parses a s-expr into a Expr, ie, constructs the AST
 (define (parse-pattern s-expr)
   (match s-expr
     [(? number? n) (numP n)]
@@ -100,12 +114,19 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
 ;;----- ;;
 
 #|
-<value> ::= ...
+<value> ::= 
+        | (numV <number>)
+        | (nilV)
+        | (conzV <value> <value>) ;; Donde first y second ambos son de tipo Value
+        | (closureV <pattern> <expr> <env>)
 |#
+
 (deftype Value
-  (numV n)
-  ; ...
-  )
+  (numV n)                                  
+  (nilV)                             
+  (conzV first second)                      
+  (closureV pattern body env)
+)
 
 #|
 BEGIN utility definitions
@@ -136,7 +157,7 @@ BEGIN utility definitions
 ;; lookup-env : Symbol Env -> Value
 (define (lookup-env x env)
   (match env
-    [(mtEnv) (error "LookupError: variable ~a not found" x)]
+    [(mtEnv) (error 'LookupError "variable ~a not found" x)]
     [(extEnv y v env) (if (equal? x y) v (lookup-env x env))]))
 
 ;; num+ : Value Value -> Value
@@ -166,7 +187,39 @@ END utility definitions
   (success v))
 
 ;; generate-substs : Pattern Value -> (Result String (Listof (Symbol * Value)))
-(define (generate-substs p v) '???)
+;; generate-substs : Pattern Value -> (Result String (Listof (Symbol * Value)))
+(define (generate-substs p v)
+  (match p
+    ;; Caso 1: Patrón es un número
+    [(numP n)
+     (match v
+       [(numV m) (if (= n m)
+                     (success '())
+                     (failure "MatchError: given number does not match pattern"))]
+       [_ (failure "MatchError: expected a number")])]
+    
+    ;; Caso 2: Patrón es una variable
+    [(varP x) (success (list (cons x v)))]
+    
+    ;; Caso 3: Patrón es nil
+    [(nilP)
+     (match v
+       [nilV (success '())]
+       [_ (failure "MatchError: expected nil")])]
+    
+    ;; Caso 4: Patrón es un par (conzP)
+    [(conzP first_pat second_pat)
+     (match v
+       [(conzV first_val second_val)
+        (match (generate-substs first_pat first_val)
+          [(failure e) (failure e)]
+          [(success subs1)
+           (match (generate-substs second_pat second_val)
+             [(failure e) (failure e)]
+             [(success subs2) (success (append subs1 subs2))])])]
+       [_ (failure "MatchError: expected a cons constructor")])]
+    ))
+
 
 ;;------------;;
 ;; P1.h, P2.c ;;
