@@ -1,7 +1,6 @@
 #lang play
 
 #|
-
 Hizo Ud uso de la whiteboard policy: NO
 En caso que afirmativo, indique con quién y sobre qué ejercicio:
 -
@@ -27,6 +26,7 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
           | (fun <symbol> <expr>)
           | (app <expr> <expr>)
           ;;------------- 2.a -------------;;
+          | (pmatch <expr> cons(<pattern> <expr>) ...) 
 |#
 (deftype Expr
   (num n)
@@ -36,6 +36,8 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
   (conz first_elem second_elem)
   (fun arg body)
   (app f arg)
+  ;;------------- 2.a -------------;;
+  (pmatch expr pattern_pairs) ;; en el fondo quiero hacer (match given expected1 expected2 ... expectedN)
 )
 
 ;;------------------;;
@@ -54,6 +56,8 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
           | sym
           | (list 'fun <sym> <s-expr>) ;; Son funciones unarias, por eso solo <sym> en lugar de (list <sym>)
           | (list <s-expr> <s-expr>)
+          ;;------------- 2.b -------------;;
+          | (list 'pmatch <s-expr> (cons <pattern> <s-expr>) ...)
 |#
 
 ;; parse : s-expr -> Expr
@@ -66,11 +70,23 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
     [(list 'nil) (nil)]
     [(list 'cons first_elem second_elem) (conz (parse first_elem) (parse second_elem))]
     [(list 'list x elems ...) (foldr (lambda (elem acc) (conz elem acc)) (nil) (cons (parse x) (map parse elems)))]
+    [(list 'list) (nil)]
     ;;------------- 1.e -------------;;
     [(? symbol? x) (id x)]
     [(list 'fun x body) (fun (parse-pattern x) (parse body))]
     [(list f a) (app (parse f) (parse a))]
     ;;------------- 2.b -------------;;
+    [(list 'pmatch expr pattern_pairs ...)
+     ;; Parseamos expr y pattern_pairs
+     (let ([parsed-expr (parse expr)]
+           [parsed-pairs (map (lambda (pair)
+                                (match pair
+                                  [(list pattern body)
+                                   (cons (parse-pattern pattern) (parse body))]
+                                  [_ (error 'parse "Invalid pattern pair format in pmatch")]))
+                              pattern_pairs)])
+       ;; Devolvemos pmatch con expr y los pares procesados
+       (pmatch parsed-expr parsed-pairs))]
   )
 )
 
@@ -106,6 +122,7 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
     [(list 'nil) (nilP)]
     [(list 'cons first_pat second_pat) (conzP (parse-pattern first_pat) (parse-pattern second_pat))]
     [(list 'list x elems ...) (foldr (lambda (elem acc) (conzP elem acc)) (nilP) (cons (parse-pattern x) (map parse-pattern elems)))]
+    [(list 'list) (nilP)]
   )
 )
 
@@ -187,7 +204,6 @@ END utility definitions
   (success v))
 
 ;; generate-substs : Pattern Value -> (Result String (Listof (Symbol * Value)))
-;; generate-substs : Pattern Value -> (Result String (Listof (Symbol * Value)))
 (define (generate-substs p v)
   (match p
     ;; Caso 1: Patrón es un número
@@ -198,22 +214,22 @@ END utility definitions
                      (failure "MatchError: given number does not match pattern"))]
        [_ (failure "MatchError: expected a number")])]
     
-    ;; Caso 2: Patrón es una variable
+    ;; Caso 2: Patrón es una variable, único caso posible
     [(varP x) (success (list (cons x v)))]
     
     ;; Caso 3: Patrón es nil
     [(nilP)
      (match v
-       [nilV (success '())]
+       [(nilV) (success '())]
        [_ (failure "MatchError: expected nil")])]
     
     ;; Caso 4: Patrón es un par (conzP)
     [(conzP first_pat second_pat)
      (match v
        [(conzV first_val second_val)
-        (match (generate-substs first_pat first_val)
-          [(failure e) (failure e)]
-          [(success subs1)
+        (match (generate-substs first_pat first_val) ;; se intenta con el primer elemento
+          [(failure e) (failure e)] ;; si falla, llegamos hasta acá
+          [(success subs1) ;; si tiene éxito, se intenta con el 2do elemento
            (match (generate-substs second_pat second_val)
              [(failure e) (failure e)]
              [(success subs2) (success (append subs1 subs2))])])]
@@ -226,7 +242,31 @@ END utility definitions
 ;;------------;;
 
 ;; interp : Expr Env -> Value
-(define (interp expr env) '???)
+(define (interp expr env)
+  (match expr
+    [(num n) (numV n)]
+    [(id x) (lookup-env x env)]
+    [(add l r) (num+ (interp l env) (interp r env))]
+    [(nil) (nilV)]
+    [(conz first_elem second_elem) (conzV (interp first_elem env) (interp second_elem env))]
+    [(fun arg body) (closureV arg body env)]
+    [(app f arg)
+     ;; Evaluamos la función en el entorno para obtener la clausura
+     (match (interp f env)
+       [(closureV pattern body fenv)
+        ;; Evaluamos el argumento en el entorno actual
+        (define arg-val (interp arg env))
+        ;; Intentamos hacer pattern matching entre el patrón y el valor del argumento
+        (match (generate-substs pattern arg-val)
+          [(success subs)
+           ;; Extendemos el entorno de la clausura con las sustituciones obtenidas y evaluamos el cuerpo
+           (interp body (extend-env* subs fenv))]
+          [(failure e)
+           ;; Lanzamos un error de matching si el patrón no calza con el argumento
+           (error "MatchError:" e)])]
+       [_ (error "TypeError: expected a closure")])]
+  )
+)
 
 
 ;;----- ;;
@@ -238,6 +278,6 @@ En función de lo implementado en la pregunta anterior, argumente porqué es út
 generate-subst no lance un error (cuando el valor no calza con el patrón) y, en cambio, retorne
 un mensaje.
 
-R: ...
+R: 
 
 |#
