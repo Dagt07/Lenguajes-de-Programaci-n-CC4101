@@ -76,16 +76,15 @@ En caso que afirmativo, indique con quién y sobre qué ejercicio:
     [(list 'fun x body) (fun (parse-pattern x) (parse body))]
     [(list f a) (app (parse f) (parse a))]
     ;;------------- 2.b -------------;;
-    [(list 'pmatch expr pattern_pairs ...)
-     ;; Parseamos expr y pattern_pairs
+    [(list 'match expr pattern_pairs ...)
      (let ([parsed-expr (parse expr)]
-           [parsed-pairs (map (lambda (pair)
-                                (match pair
-                                  [(list pattern body)
-                                   (cons (parse-pattern pattern) (parse body))]
-                                  [_ (error 'parse "Invalid pattern pair format in pmatch")]))
-                              pattern_pairs)])
-       ;; Devolvemos pmatch con expr y los pares procesados
+           [parsed-pairs
+            (map (lambda (pair)
+                   (match pair
+                     [(list pattern body)
+                      (cons (parse-pattern pattern) (parse body))]
+                     [_ (error 'parse "Invalid pattern pair format in match")]))
+                 pattern_pairs)])
        (pmatch parsed-expr parsed-pairs))]
   )
 )
@@ -265,6 +264,7 @@ END utility definitions
            ;; Lanzamos un error de matching si el patrón no calza con el argumento
            (error "MatchError:" e)])]
        [_ (error "TypeError: expected a closure")])]
+    ;;--------------- 2.c -----------------;;
   )
 )
 
@@ -280,4 +280,13 @@ un mensaje.
 
 R: 
 
+Es útil que generate-subst retorne un mensaje en lugar de un error, ya que permite continuar 
+evaluando otros patrones en un match sin interrumpir la ejecución del intérprete. De este modo, 
+si ningún patrón calza, se puede lanzar un error final después de intentar todos los casos.
+   
+Además, devolver un mensaje en lugar de lanzar un error evita el costo asociado a la manipulación
+del call stack. Cuando se lanza un error, el sistema debe crear y revisar el call stack, lo cual 
+es más costoso en términos de rendimiento que retornar un mensaje de fallo. Al devolver un mensaje,
+se optimiza el proceso de evaluación de patrones, haciéndolo más eficiente.
 |#
+

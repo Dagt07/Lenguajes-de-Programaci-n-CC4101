@@ -108,3 +108,24 @@
 
 
 ;; P2 b)
+(test (parse '{match 2 [1 1] [x 3]})
+ (pmatch (num 2) (list (cons (numP 1) (num 1)) (cons (varP 'x) (num 3)))) )
+
+(test (parse '{match 2 [2 (fun (cons x y) (cons y x))] [x x]})
+      (pmatch (num 2) (list (cons (numP 2) (fun (conzP (varP 'x) (varP 'y)) (conz (id 'y) (id 'x))))
+                            (cons (varP 'x) (id 'x)))))
+
+(test (parse '{match (nil) [(nil) 1]})
+      (pmatch (nil) (list (cons (nilP) (num 1)))) )
+
+(test (parse '{match 2 [2 (cons 1 2)] [x x]})
+      (pmatch (num 2) (list (cons (numP 2) (conz (num 1) (num 2))) (cons (varP 'x) (id 'x)))) )
+
+(test (parse '{match (nil) [(nil) (list 1 2 3)]})
+      (pmatch (nil) (list (cons (nilP) (conz (num 1) (conz (num 2) (conz (num 3) (nil))))))) )
+
+(test (parse '{match (+ 1 3) [4 (nil)] [x x]})
+      (pmatch (add (num 1) (num 3)) (list (cons (numP 4) (nil)) (cons (varP 'x) (id 'x)))) )
+
+(test (parse '{match (cons 1 2) [(cons 1 2) 2] [x x]})
+      (pmatch (conz (num 1) (num 2)) (list (cons (conzP (numP 1) (numP 2)) (num 2)) (cons (varP 'x) (id 'x)))) )
